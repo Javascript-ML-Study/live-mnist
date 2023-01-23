@@ -1,6 +1,6 @@
 import { DrawNumber } from './components/drawNumber.js';
-import { LoadMnistData } from './components/mnist.js';
+import { Mnist } from './components/mnist.js';
 
 customElements.define('draw-number', DrawNumber);
-customElements.define('load-mnist', LoadMnistData);
+customElements.define('train-mnist', Mnist);
 
