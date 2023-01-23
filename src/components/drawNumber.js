@@ -41,7 +41,6 @@ class DrawNumber extends HTMLElement {
     }
 
     setMousePosition(e) {
-        console.log(e)
         this.mousePosition.x = e.clientX / 5
         this.mousePosition.y = e.clientY / 5
     }
