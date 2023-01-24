@@ -6,6 +6,8 @@ class DrawNumber extends HTMLElement {
 
         this.canvas = document.createElement("canvas")
         this.ctx = this.canvas.getContext('2d')
+
+
         this.canvasWidth = 28
         this.canvasHeight = 28
         this.mousePosition = {
@@ -21,6 +23,18 @@ class DrawNumber extends HTMLElement {
         this.addOutlineOnCanvas()
         this.expandCanvasSize(140, 140)
         this.appendChild(this.canvas)
+
+        this.ctx.beginPath();
+        this.ctx.rect(0, 0, 28, 28);
+        this.ctx.fillStyle = "black";
+        this.ctx.fill();
+    }
+
+    clear() {
+        this.ctx.beginPath();
+        this.ctx.rect(0, 0, 28, 28);
+        this.ctx.fillStyle = "black";
+        this.ctx.fill(); 
     }
 
     draw(e) {
@@ -30,9 +44,9 @@ class DrawNumber extends HTMLElement {
 
         this.ctx.beginPath()
 
-        this.ctx.lineWidth = 4
+        this.ctx.lineWidth = 2
         this.ctx.lineCap = 'round'
-        this.ctx.strokeStyle = '#000000'
+        this.ctx.strokeStyle = '#ffffff'
       
         this.ctx.moveTo(this.mousePosition.x, this.mousePosition.y)
         this.setMousePosition(e)

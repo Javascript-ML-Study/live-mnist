@@ -141,6 +141,8 @@ export class MnistData {
     const xs = tf.tensor2d(batchImagesArray, [batchSize, IMAGE_SIZE]);
     const labels = tf.tensor2d(batchLabelsArray, [batchSize, NUM_CLASSES]);
 
+    console.log("batchImagesArray batchLabelsArray", batchImagesArray, batchLabelsArray)
+
     return {xs, labels};
   }
 }

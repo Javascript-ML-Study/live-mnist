@@ -6,6 +6,8 @@ class Mnist extends HTMLElement {
 
     constructor() {
         super()
+        this.label = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        this.model = undefined
 
         
     }
@@ -138,17 +140,122 @@ class Mnist extends HTMLElement {
           callbacks: fitCallbacks
         });
     }
+
+    async saveModel(model) {
+        model.save('localstorage://mnistmodel');
+    }
+
+    async loadModel() {
+        try {
+            const model = await tf.loadLayersModel('localstorage://mnistmodel');
+            return {
+                model: model,
+                isexist: true
+            }
+        } catch (error) {
+            return {
+                error: error,
+                isexist: false
+            }
+        }
+
+    }
+
+    
+
+
+
+    doPrediction(model, data, testDataSize = 1) {
+        const IMAGE_WIDTH = 28;
+        const IMAGE_HEIGHT = 28;
+        const testData = data.nextTestBatch(testDataSize);
+        const testxs = testData.xs.reshape([testDataSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
+        const labels = testData.labels.argMax(-1);
+        const preds = model.predict(testxs).argMax(-1);
+
+        console.log(data, testData, testxs,labels, preds )
+
+
+        testxs.dispose();
+        return [preds, labels];
+    }
+
+    async showAccuracy(model, data) {
+        const [preds, labels] = this.doPrediction(model, data);
+        const classAccuracy = await tfvis.metrics.perClassAccuracy(labels, preds);
+        const container = {name: 'Accuracy', tab: 'Evaluation'};
+        tfvis.show.perClassAccuracy(container, classAccuracy, this.label);
+
+        labels.dispose();
+    }
+
+    async showConfusion(model, data) {
+        const [preds, labels] = this.doPrediction(model, data);
+        const confusionMatrix = await tfvis.metrics.confusionMatrix(labels, preds);
+        const container = {name: 'Confusion Matrix', tab: 'Evaluation'};
+        tfvis.render.confusionMatrix(container, {values: confusionMatrix, tickLabels: this.label});
+
+        labels.dispose();
+    }
+
+    predictOwnImage() {
+        const imageTarget = document.querySelector("draw-number")
+        const imageData = imageTarget.ctx.getImageData(0,0,28,28)
+
+        let tfImage = tf.browser.fromPixels(imageData, 1)
+        .mean(2)
+        .toFloat()
+        .expandDims(0)
+        .expandDims(-1)
+
+
+        let predictModel = this.model.predict(tfImage).argMax(-1);
+        let predictModelValue = predictModel.dataSync()
+        let predictLabel = {}
+
+        for (let index = 0; index < predictModelValue.length; index++) {
+            const element = predictModelValue[index];
+            predictLabel[predictModelValue[index]] = {
+                number: index,
+                value: predictModelValue[index]
+            }
+        }
+
+        document.querySelector("#result").innerHTML = predictModelValue[0]
+
+        console.log(predictModelValue[0])
+    }
   
     async run() {
+        const loadedModel = await this.loadModel()
         const data = new MnistData();
         await data.load();
-        await this.showExamples(data);
 
-        const model = this.getModel();
-        tfvis.show.modelSummary({name: 'Model Architecture', tab: 'Model'}, model);
+        console.log(data)
 
-        await this.train(model, data);
+        if (loadedModel.isexist == false) {
+
+            await this.showExamples(data);
+    
+            const model = this.getModel();
+            tfvis.show.modelSummary({name: 'Model Architecture', tab: 'Model'}, model);
+    
+            await this.train(model, data);
+            await this.saveModel(model)
+            this.model = model
+        } else {
+            await this.showExamples(data);
+
+            await this.showAccuracy(loadedModel.model, data);
+            await this.showConfusion(loadedModel.model, data);
+            this.model = loadedModel.model
+        }
+
+
+
+
     }
+
 
 
     connectedCallback() {
